@@ -1,2 +1,2 @@
-# eje-proyecto-final-uea2
+# Eje-proyecto-final-uea2
 Equipo 1
