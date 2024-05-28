@@ -1,1 +1,119 @@
-o
+#include <Servo.h>
+#include <Stepper.h>
+#define STEPS 32
+#define temp 30
+//MOTOR PASO A PASO
+volatile boolean TurnDetected; 
+volatile boolean rotationdirection; 
+const int PinCLK=2;   
+const int PinDT=3;   
+int RotaryPosition=0;   
+int PrevPosition;    
+int StepsToTake; 
+Stepper small_stepper(STEPS, 4, 6, 5, 7);
+void isr ()  {
+  delay(4);  // delay for Debouncing
+  if (digitalRead(PinCLK))
+    rotationdirection= digitalRead(PinDT);
+  else
+    rotationdirection= !digitalRead(PinDT);
+  TurnDetected = true;
+}
+//SERVOMOTORES
+int i=90,j=90,x=90;
+Servo servomotor3; //Servomotor pinza
+int boton_sub3=0;
+int boton_baj3=0;
+Servo servomotor2; //Servomotor en medio
+int boton_sub2=0;
+int boton_baj2=0;
+
+void setup(){
+  Serial.begin(9600);
+  Serial.print("Inicio");
+  //MOTOR PASO A PASO
+  pinMode(PinCLK,INPUT);
+  pinMode(PinDT,INPUT);  
+  attachInterrupt (0,isr,FALLING); 
+  //SERVOMOTORES
+  servomotor3.attach(13);
+  servomotor3.write(0);
+  pinMode(A4,INPUT);
+  pinMode(A5,INPUT);
+  
+  servomotor2.attach(12);
+  servomotor2.write(0);
+  pinMode(A2,INPUT);
+  pinMode(A3,INPUT);
+  servomotor3.write(i);
+  servomotor2.write(j);
+  
+}
+void loop(){
+  //MOTOR PASO A PASO
+  small_stepper.setSpeed(700); 
+  if (TurnDetected)  {
+    PrevPosition = RotaryPosition; 
+    if (rotationdirection) {
+      RotaryPosition=RotaryPosition-1;}
+    else {RotaryPosition=RotaryPosition+1;}
+    TurnDetected = false;
+    if ((PrevPosition + 1) == RotaryPosition) {
+      StepsToTake=50; 
+      small_stepper.step(StepsToTake);}
+    if ((RotaryPosition + 1) == PrevPosition) {
+      StepsToTake=-50;
+      small_stepper.step(StepsToTake);}
+  }
+     digitalWrite(4, LOW);
+     digitalWrite(5, LOW);
+     digitalWrite(6, LOW);
+     digitalWrite(7, LOW);   
+  
+  //SERVOMOTOR pinza
+  boton_sub3=digitalRead(A4);
+  boton_baj3=digitalRead(A5);
+  if(boton_sub3==HIGH){
+     i++;
+     if (i>=180){
+      i=180;
+     }
+     Serial.print("Servo3= ");
+     Serial.println(i);
+     servomotor3.write(i);
+     delay(temp);
+  }
+  if(boton_baj3==HIGH){
+    i--;
+    if (i<=0){
+      i=0;
+     }
+     Serial.print("Servo3= ");
+     Serial.println(i);
+    servomotor3.write(i);
+    delay(temp);
+  }
+  //SERVOMOTOR en medio 
+  boton_sub2=digitalRead(A2);
+  boton_baj2=digitalRead(A3);
+  if(boton_sub2==HIGH){
+     j++;
+     if (j>=180){
+      i=180;
+     }
+     Serial.print("Servo2= ");
+     Serial.println(j);
+     servomotor2.write(j);
+     delay(temp);
+  }
+  if(boton_baj2==HIGH){
+    j--;
+    if (j<=0){
+      i=0;
+     }
+     Serial.print("Servo2= ");
+     Serial.println(j);
+    servomotor2.write(j);
+    delay(temp);
+  }
+}
